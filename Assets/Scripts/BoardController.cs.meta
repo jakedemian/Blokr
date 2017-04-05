@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 52dd5319602df94429402d4b4b3d641c
+timeCreated: 1491326913
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - boardSquarePrefab: {instanceID: 0}
+  - templateCubePrefab: {instanceID: 0}
+  - cubePrefab: {instanceID: 0}
+  - notConfirmedTemplateMaterial: {fileID: 2100000, guid: 09d58c6e65eb7144493ec784a67ee986,
+      type: 2}
+  - confirmTemplateMaterial: {fileID: 2100000, guid: 7c86234ca4f47a54f942a69cce81ba77,
+      type: 2}
+  - lockedGridSquare: {fileID: 2100000, guid: f28575ece0ba6c94582324740901d3ee, type: 2}
+  - unlockedGridSquare: {fileID: 2100000, guid: 134a1c93c27ca3e45a11f067e71ce49e,
+      type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

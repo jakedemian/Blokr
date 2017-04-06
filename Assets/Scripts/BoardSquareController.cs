@@ -8,4 +8,15 @@ public class BoardSquareController : MonoBehaviour {
 	public int gridX;
 	public int gridY;
 	public bool locked = true;
+
+	public Material lockedSquare;
+	public Material unlockedSquare;
+
+	void Update() {
+		if(locked) {
+			GetComponent<Renderer>().material = lockedSquare;
+		} else {
+			GetComponent<Renderer>().material = unlockedSquare;
+		}
+	}
 }

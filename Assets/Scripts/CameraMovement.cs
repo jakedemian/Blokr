@@ -27,7 +27,9 @@ public class CameraMovement : MonoBehaviour {
 	void Start() {
 		isOnMobileDevice = Application.platform == RuntimePlatform.Android
 		|| Application.platform == RuntimePlatform.IPhonePlayer;
-		
+	}
+
+	void LateUpdate() {
 		transform.LookAt(target);
 	}
 

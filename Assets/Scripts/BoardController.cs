@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BoardController : MonoBehaviour {
-	private bool isOnMobileDevice;
-
 	/////////////////////////////////////////////////
 	// PUBLIC
 
@@ -33,6 +31,9 @@ public class BoardController : MonoBehaviour {
 	/////////////////////////////////////////////////
 	// PRIVATE MEMBERS
 
+	// true if user is on a mobile device, false if on desktop
+	private bool isOnMobileDevice;
+
 	// the template cube object
 	private GameObject templateCube;
 
@@ -53,6 +54,9 @@ public class BoardController : MonoBehaviour {
 
 	// true when the first block has been placed
 	private bool firstBlockPlaced = false;
+
+	public Material lockedGridSquare;
+	public Material unlockedGridSquare;
 
 	/**
 	 * START
@@ -76,7 +80,8 @@ public class BoardController : MonoBehaviour {
 			int layer = 1 << BOARD_SQUARE_LAYER; // bit shift for some reason..
 
 			// if our raycast hits a board square that is unlocked (or it's the first turn)
-			if(Physics.Raycast(ray, out hit, Mathf.Infinity, layer)) {
+			if(Physics.Raycast(ray, out hit, Mathf.Infinity, layer)
+			   && (!hit.collider.gameObject.GetComponent<BoardSquareController>().locked || !firstBlockPlaced)) {
 				currentBoardSquare = hit.collider.gameObject;
 				int currentCubesInBoardSquare = currentBoardSquare.GetComponent<BoardSquareController>().cubesInThisSpace;
 
@@ -116,8 +121,20 @@ public class BoardController : MonoBehaviour {
 				// update the board square's cube count
 				currentBoardSquare.GetComponent<BoardSquareController>().cubesInThisSpace++;
 
-			}
+				int visionDistance = currentBoardSquare.GetComponent<BoardSquareController>().cubesInThisSpace;
+				int thisSquareX = currentBoardSquare.GetComponent<BoardSquareController>().gridX;
+				int thisSquareY = currentBoardSquare.GetComponent<BoardSquareController>().gridY;
 
+				for(int i = 0; i < grid.Count; i++) {
+					for(int j = 0; j < grid[i].Count; j++) {
+						int gridX = grid[i][j].GetComponent<BoardSquareController>().gridX;
+						int gridY = grid[i][j].GetComponent<BoardSquareController>().gridY;
+						if((int)Mathf.Sqrt(Mathf.Pow((gridX - thisSquareX), 2) + Mathf.Pow((gridY - thisSquareY), 2)) <= visionDistance) {
+							grid[i][j].GetComponent<BoardSquareController>().locked = false;
+						}
+					}
+				}
+			}
 			removeTemplateCube();
 		}
 	}
@@ -153,9 +170,9 @@ public class BoardController : MonoBehaviour {
 	 */
 	void createGameBoard() {
 		grid = new List<List<GameObject>>();
-		for(int i = 0; i < 5; i++) {
+		for(int i = 0; i < 16; i++) {
 			grid.Add(new List<GameObject>());
-			for(int j = 0; j < 5; j++) {
+			for(int j = 0; j < 16; j++) {
 				GameObject newSquare = Instantiate(boardSquarePrefab, 			
 					                       new Vector3((float)i, 0.0f, (float)j), 
 					                       Quaternion.identity);

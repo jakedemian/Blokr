@@ -28,6 +28,9 @@ public class BoardController : MonoBehaviour {
 	// the layer that houses board squares.  used to prevent Raycast from hitting other objects
 	private const int BOARD_SQUARE_LAYER = 8;
 
+	// time delay to place a block
+	private const float BLOCK_PLACEMENT_TIME_DELAY = 0.5f;
+
 	/////////////////////////////////////////////////
 	// PRIVATE MEMBERS
 
@@ -42,9 +45,6 @@ public class BoardController : MonoBehaviour {
 
 	// the current grid square the user is attempting to place a block at
 	private GameObject currentBoardSquare;
-
-	// amount of time (in seconds) that must pass before a cube can be placed
-	private float templatePlacementDelayTimeSeconds = 0.5f;
 
 	// timer to help users pervent accidental block placement
 	private float placementTimer;
@@ -87,7 +87,7 @@ public class BoardController : MonoBehaviour {
 
 				// if there is no template cube, create one
 				if(templateCube == null) { 
-					placementTimer = templatePlacementDelayTimeSeconds;
+					placementTimer = BLOCK_PLACEMENT_TIME_DELAY;
 					templateCube = Instantiate(templateCubePrefab,
 						new Vector3(hit.collider.transform.position.x,
 							(float)currentCubesInBoardSquare + 0.5f,
@@ -99,7 +99,7 @@ public class BoardController : MonoBehaviour {
 				else if(templateCube != null && (hit.collider.transform.position.x != templateCube.transform.position.x
 				        || hit.collider.transform.position.z != templateCube.transform.position.z)) {
 					// move the template cube and restart the confirm timer/texture
-					placementTimer = templatePlacementDelayTimeSeconds;
+					placementTimer = BLOCK_PLACEMENT_TIME_DELAY;
 					templateCube.GetComponent<Renderer>().material = notConfirmedTemplateMaterial;
 					placementReady = false;
 					templateCube.transform.position = new Vector3(hit.collider.transform.position.x,
@@ -129,7 +129,13 @@ public class BoardController : MonoBehaviour {
 					for(int j = 0; j < grid[i].Count; j++) {
 						int gridX = grid[i][j].GetComponent<BoardSquareController>().gridX;
 						int gridY = grid[i][j].GetComponent<BoardSquareController>().gridY;
-						if((int)Mathf.Sqrt(Mathf.Pow((gridX - thisSquareX), 2) + Mathf.Pow((gridY - thisSquareY), 2)) <= visionDistance) {
+
+						float distBetweenGridSquares = Mathf.Sqrt(
+							                               Mathf.Pow((gridX - thisSquareX), 2) +
+							                               Mathf.Pow((gridY - thisSquareY), 2)
+						                               );
+
+						if(distBetweenGridSquares <= visionDistance) {
 							grid[i][j].GetComponent<BoardSquareController>().locked = false;
 						}
 					}

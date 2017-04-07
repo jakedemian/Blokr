@@ -30,6 +30,9 @@ public class BoardController : MonoBehaviour {
 
 	public GameObject cubeParticlePrefab;
 
+	public List<AudioClip> blockSmashSounds;
+	private int lastSmashSoundIdx = -1;
+
 
 	/**
 	 * START
@@ -59,12 +62,27 @@ public class BoardController : MonoBehaviour {
 
 				Destroy(cubeObj);
 				generateCubeParticles(cubePosition);
+				generateBlockDestroySound(cubePosition);
 
 			}
 		} else {
 			// theyve released the input, so unlock
 			inputLocked = false;
 		}
+	}
+
+	void generateBlockDestroySound(Vector3 sourcePos) {
+		int soundIdx = Random.Range(0, blockSmashSounds.Count - 1);
+
+		if(soundIdx == lastSmashSoundIdx) {
+			soundIdx++;
+			if(soundIdx >= blockSmashSounds.Count) {
+				soundIdx = 0;
+			}
+		}
+
+		AudioSource.PlayClipAtPoint(blockSmashSounds[soundIdx], sourcePos);
+		lastSmashSoundIdx = soundIdx;
 	}
 
 	void generateCubeParticles(Vector3 pos) {

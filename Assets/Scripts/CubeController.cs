@@ -6,7 +6,6 @@ public class CubeController : MonoBehaviour {
 
 	public bool transparent = false;
 	public Material cubeMaterial;
-	public Material grayTransparentMaterial;
 
 	// Use this for initialization
 	void Start() {
@@ -15,10 +14,9 @@ public class CubeController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update() {
-		if(transparent) {
-			GetComponent<Renderer>().material = grayTransparentMaterial;
-		} else {
-			GetComponent<Renderer>().material = cubeMaterial;
+		Rigidbody rb = GetComponent<Rigidbody>();
+		if(rb.velocity.y > 0f) {
+			rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 		}
 	}
 }

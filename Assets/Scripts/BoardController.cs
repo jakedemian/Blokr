@@ -32,6 +32,9 @@ public class BoardController : MonoBehaviour {
 
 	public List<AudioClip> blockSmashSounds;
 	private int lastSmashSoundIdx = -1;
+	private int currentLevelIdx = -1;
+
+	private List<GameObject> objectInstances = new List<GameObject>();
 
 
 	/**
@@ -41,7 +44,10 @@ public class BoardController : MonoBehaviour {
 		isOnMobileDevice = Application.platform == RuntimePlatform.Android
 		|| Application.platform == RuntimePlatform.IPhonePlayer;
 
+		// TODO FIXME this should probably be done in initLevel()
 		createGameBoard();
+
+		// TODO FIXME make level loading dynamic
 		initLevel(0);
 	}
 
@@ -49,6 +55,11 @@ public class BoardController : MonoBehaviour {
 	 * UPDATE
 	 */
 	void Update() {
+		if(Input.GetKeyUp(KeyCode.R)) {
+			resetLevel();
+			return;
+		}
+
 		if(isInputDown()) {
 			Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
 			RaycastHit hit;
@@ -87,7 +98,7 @@ public class BoardController : MonoBehaviour {
 
 	void generateCubeParticles(Vector3 pos) {
 		for(int i = 0; i < CUBE_PARTICLE_COUNT; i++) {
-			Instantiate(cubeParticlePrefab, pos, Quaternion.identity);
+			objectInstances.Add(Instantiate(cubeParticlePrefab, pos, Quaternion.identity));
 		}
 	}
 
@@ -106,7 +117,8 @@ public class BoardController : MonoBehaviour {
 				newSquare.GetComponent<BoardSquareController>().gridY = j;
 				grid[i].Add(newSquare);
 
-				// FIXME setting the camera focal point should be done in the camera movement script, not here
+				// FIXME setting the camera focal point should be done in the camera movement script, not here. the camera obj should store 
+				// the vertical offset from this object, rather than directly use this objects current position
 				// set the position of the controller
 				transform.position = new Vector3(2f, 3f, 2f);
 			}
@@ -115,8 +127,24 @@ public class BoardController : MonoBehaviour {
 
 	void initLevel(int levelIdx) {
 		for(int i = 0; i < 5; i++) {
-			Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
+			objectInstances.Add(Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity));
 		}
+		currentLevelIdx = levelIdx;
+	}
+
+	public void resetLevel() {
+		if(currentLevelIdx != -1) {
+			for(int i = 0; i < objectInstances.Count; i++) {
+				Destroy(objectInstances[i]);
+			}
+			objectInstances = new List<GameObject>();
+
+			lastSmashSoundIdx = -1;
+			inputLocked = false;
+
+			initLevel(currentLevelIdx);
+		}
+
 	}
 
 	/**

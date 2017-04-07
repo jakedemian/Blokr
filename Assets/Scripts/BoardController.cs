@@ -14,7 +14,7 @@ public class BoardController : MonoBehaviour {
 
 	/////////////////////////////////////////////////
 	// CONSTANTS
-	private const float CUBE_PARTICLE_COUNT = 20;
+	private const float CUBE_PARTICLE_COUNT = 35;
 	/////////////////////////////////////////////////
 	// PRIVATE MEMBERS
 

@@ -11,8 +11,12 @@ public class CubeParticle : MonoBehaviour {
 
 	void Start() {
 		float speed = Random.Range(5f, 20f);
-		GetComponent<Rigidbody>().velocity = Random.onUnitSphere * speed;
-		GetComponent<Rigidbody>().angularVelocity = Random.onUnitSphere * speed;
+
+		Vector3 randomUnitOnSphere = Random.onUnitSphere;
+
+		transform.position = transform.position + randomUnitOnSphere;
+		GetComponent<Rigidbody>().velocity = randomUnitOnSphere * speed;
+		GetComponent<Rigidbody>().angularVelocity = randomUnitOnSphere * speed;
 
 		startingScale = transform.localScale.x; // same scale for x, y, and z, so just use x
 	}

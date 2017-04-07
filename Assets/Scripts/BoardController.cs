@@ -14,7 +14,7 @@ public class BoardController : MonoBehaviour {
 
 	/////////////////////////////////////////////////
 	// CONSTANTS
-
+	private const float CUBE_PARTICLE_COUNT = 20;
 	/////////////////////////////////////////////////
 	// PRIVATE MEMBERS
 
@@ -86,7 +86,7 @@ public class BoardController : MonoBehaviour {
 	}
 
 	void generateCubeParticles(Vector3 pos) {
-		for(int i = 0; i < 50; i++) {
+		for(int i = 0; i < CUBE_PARTICLE_COUNT; i++) {
 			Instantiate(cubeParticlePrefab, pos, Quaternion.identity);
 		}
 	}

@@ -15,8 +15,8 @@ public class CameraMovement : MonoBehaviour {
 	private const float CAM_FOV_MIN = 20f;
 	private const float CAM_FOV_MAX = 120f;
 
-	private const float ZOOM_SPEED = 0.3f;
-	private const float ORBIT_SPEED = 2.0f;
+	private const float ZOOM_SPEED = 0.1f;
+	private const float ORBIT_SPEED = 4.0f;
 
 	private Vector2 previousVector;
 	private bool twoFingerEvent = false;

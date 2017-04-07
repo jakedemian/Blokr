@@ -10,7 +10,7 @@ public class CubeParticle : MonoBehaviour {
 	private float startingScale;
 
 	void Start() {
-		float speed = Random.Range(4f, 10f);
+		float speed = Random.Range(5f, 20f);
 		GetComponent<Rigidbody>().velocity = Random.onUnitSphere * speed;
 		GetComponent<Rigidbody>().angularVelocity = Random.onUnitSphere * speed;
 

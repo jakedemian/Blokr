@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
 public class BoardController : MonoBehaviour {
 	/////////////////////////////////////////////////
@@ -29,6 +28,9 @@ public class BoardController : MonoBehaviour {
 
 	private bool inputLocked = false;
 
+	public GameObject cubeParticlePrefab;
+
+
 	/**
 	 * START
 	 */
@@ -51,11 +53,23 @@ public class BoardController : MonoBehaviour {
 			if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER) && !inputLocked) {
 				inputLocked = true;
 				GameObject cubeObj = hit.collider.gameObject;
+
+				// get cube's current position so we have it after it's destroyed
+				Vector3 cubePosition = cubeObj.transform.position;
+
 				Destroy(cubeObj);
+				generateCubeParticles(cubePosition);
+
 			}
 		} else {
 			// theyve released the input, so unlock
 			inputLocked = false;
+		}
+	}
+
+	void generateCubeParticles(Vector3 pos) {
+		for(int i = 0; i < 50; i++) {
+			Instantiate(cubeParticlePrefab, pos, Quaternion.identity);
 		}
 	}
 
@@ -73,14 +87,17 @@ public class BoardController : MonoBehaviour {
 				newSquare.GetComponent<BoardSquareController>().gridX = i;
 				newSquare.GetComponent<BoardSquareController>().gridY = j;
 				grid[i].Add(newSquare);
-				transform.position = new Vector3(2f, 0f, 2f);
+
+				// FIXME setting the camera focal point should be done in the camera movement script, not here
+				// set the position of the controller
+				transform.position = new Vector3(2f, 3f, 2f);
 			}
 		}
 	}
 
 	void initLevel(int levelIdx) {
 		for(int i = 0; i < 5; i++) {
-			Instantiate(cubePrefab, new Vector3(0f, (float)i + 0.5f, 0f), Quaternion.identity);
+			Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
 		}
 	}
 

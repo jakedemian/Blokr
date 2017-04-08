@@ -35,10 +35,13 @@ public class MainController : MonoBehaviour {
 	private int currentLevelIdx = -1;
 
 	private List<GameObject> objectInstances = new List<GameObject>();
+	private List<GameObject> cubes = new List<GameObject>();
 
 	private GameObject targetCube = null;
 
 	private Vector2 lastTouchInputPosition = new Vector2(0f, 0f);
+
+	public float blockFallSpeed = -5f;
 
 	/**
 	 * START
@@ -95,6 +98,15 @@ public class MainController : MonoBehaviour {
 
 					// get cube's current position so we have it after it's destroyed
 					Vector3 cubePosition = targetCube.transform.position;
+					
+					for(int i = 0; i < cubes.Count; i++) {
+						if(cubes[i] != null
+						   && !cubes[i].Equals(targetCube)
+						   && cubes[i].transform.position.y > targetCube.transform.position.y) {
+							Rigidbody rb = cubes[i].GetComponent<Rigidbody>();
+							rb.velocity = new Vector3(rb.velocity.x, blockFallSpeed, rb.velocity.z);
+						}
+					}
 
 					Destroy(targetCube);
 					generateCubeParticles(cubePosition);
@@ -150,7 +162,9 @@ public class MainController : MonoBehaviour {
 
 	void initLevel(int levelIdx) {
 		for(int i = 0; i < 5; i++) {
-			objectInstances.Add(Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity));
+			GameObject newCube = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
+			objectInstances.Add(newCube);
+			cubes.Add(newCube);
 		}
 		currentLevelIdx = levelIdx;
 	}
@@ -160,7 +174,11 @@ public class MainController : MonoBehaviour {
 			for(int i = 0; i < objectInstances.Count; i++) {
 				Destroy(objectInstances[i]);
 			}
+			for(int i = 0; i < cubes.Count; i++) {
+				Destroy(cubes[i]);
+			}
 			objectInstances = new List<GameObject>();
+			cubes = new List<GameObject>();
 
 			lastSmashSoundIdx = -1;
 			inputDown = false;

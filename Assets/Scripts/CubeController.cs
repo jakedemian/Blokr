@@ -21,8 +21,11 @@ public class CubeController : MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 		Rigidbody rb = GetComponent<Rigidbody>();
-		if(rb.velocity.y > 0f) {
+		if(rb.velocity.y >= 0f) {
 			rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+
+			float roundedPositionY = ((float)((int)transform.position.y)) + 0.5f;
+			transform.position = new Vector3(transform.position.x, roundedPositionY, transform.position.z);
 		}
 
 		if(targeted && GetComponent<Renderer>().sharedMaterial.Equals(cubeMaterial)) {

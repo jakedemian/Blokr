@@ -109,6 +109,7 @@ public class MainController : MonoBehaviour {
 							}
 						}
 
+						cubes.Remove(targetCube);
 						Destroy(targetCube);
 						generateCubeParticles(cubePosition);
 						generateBlockDestroySound(cubePosition);
@@ -185,11 +186,17 @@ public class MainController : MonoBehaviour {
 
 	public void resetLevel() {
 		if(currentLevelIdx != -1) {
+			
 			for(int i = 0; i < objectInstances.Count; i++) {
-				Destroy(objectInstances[i]);
+				GameObject obj = objectInstances[i];
+				objectInstances.Remove(obj);
+				Destroy(obj);
 			}
+
 			for(int i = 0; i < cubes.Count; i++) {
-				Destroy(cubes[i]);
+				GameObject cube = cubes[i];
+				cubes.Remove(cube);
+				Destroy(cube);
 			}
 			objectInstances = new List<GameObject>();
 			cubes = new List<GameObject>();

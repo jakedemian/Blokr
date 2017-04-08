@@ -12,8 +12,8 @@ public class CameraMovement : MonoBehaviour {
 
 	private bool isOnMobileDevice;
 
-	private const float CAM_FOV_MIN = 20f;
-	private const float CAM_FOV_MAX = 120f;
+	private const float CAM_FOV_MIN = 25f;
+	private const float CAM_FOV_MAX = 25f;
 
 	private const float ZOOM_SPEED = 0.1f;
 	private const float ORBIT_SPEED = 4.0f;
@@ -68,23 +68,7 @@ public class CameraMovement : MonoBehaviour {
 			cameraOrbit(angleOffset, direction);
 		}
 
-		// zoom
-		Touch touchZero = Input.GetTouch(0);
-		Touch touchOne = Input.GetTouch(1);
-
-		Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
-		Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
-
-		float prevTouchDeltaMag = (touchZeroPrevPos - touchOnePrevPos).magnitude;
-		float touchDeltaMag = (touchZero.position - touchOne.position).magnitude;
-
-		float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
-
-		if(Mathf.Abs(deltaMagnitudeDiff) > REQUIRED_PINCH_SPEED) {
-			cameraZoom(deltaMagnitudeDiff);
-		}
-
-		// pan
+		// vertical pan
 		// TODO
 
 	}
@@ -92,14 +76,6 @@ public class CameraMovement : MonoBehaviour {
 	/***********************************************************
 	 * ACTIONS
 	 ***********************************************************/
-
-	/**
-	 * Handle a pinch event on a mobile device
-	 */
-	void cameraZoom(float amount) {
-		Camera.main.fieldOfView += amount * ZOOM_SPEED;
-		Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView, CAM_FOV_MIN, CAM_FOV_MAX);
-	}
 
 	/**
 	 * Orbit the camera around the game board.

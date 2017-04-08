@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoardController : MonoBehaviour {
+public class MainController : MonoBehaviour {
 	/////////////////////////////////////////////////
 	// PUBLIC
 
@@ -26,7 +26,7 @@ public class BoardController : MonoBehaviour {
 
 	private int RAYCAST_LAYER = 1 << 8;
 
-	private bool inputLocked = false;
+	private bool inputDown = false;
 
 	public GameObject cubeParticlePrefab;
 
@@ -36,6 +36,9 @@ public class BoardController : MonoBehaviour {
 
 	private List<GameObject> objectInstances = new List<GameObject>();
 
+	private GameObject targetCube = null;
+
+	private Vector2 lastTouchInputPosition = new Vector2(0f, 0f);
 
 	/**
 	 * START
@@ -55,30 +58,50 @@ public class BoardController : MonoBehaviour {
 	 * UPDATE
 	 */
 	void Update() {
-		if(Input.GetKeyUp(KeyCode.R)) {
-			resetLevel();
-			return;
-		}
+		handleCubeTargeting();
+	}
 
+	void handleCubeTargeting() {
+		// if theyre currently holding down the input
 		if(isInputDown()) {
 			Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
 			RaycastHit hit;
 
-			if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER) && !inputLocked) {
-				inputLocked = true;
-				GameObject cubeObj = hit.collider.gameObject;
+			if(!inputDown) {
+				inputDown = true;
+				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
+					targetCube = hit.collider.gameObject;
+					targetCube.GetComponent<CubeController>().targeted = true;
+				}
+			} else if(targetCube != null) {
+				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
+					GameObject obj = hit.collider.gameObject;
+					targetCube.GetComponent<CubeController>().targeted = obj.Equals(targetCube);
+				} else { 
+					targetCube.GetComponent<CubeController>().targeted = false;
+				}
+			}
+		}
+		// theyve released the input
+		else if(inputDown) {
+			// we get in here ONCE after user releases finger
+			inputDown = false;
 
-				// get cube's current position so we have it after it's destroyed
-				Vector3 cubePosition = cubeObj.transform.position;
+			Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
+			RaycastHit hit;
 
-				Destroy(cubeObj);
-				generateCubeParticles(cubePosition);
-				generateBlockDestroySound(cubePosition);
+			if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
+				if(hit.collider.gameObject.Equals(targetCube)) {
+
+					// get cube's current position so we have it after it's destroyed
+					Vector3 cubePosition = targetCube.transform.position;
+
+					Destroy(targetCube);
+					generateCubeParticles(cubePosition);
+					generateBlockDestroySound(cubePosition);
+				}
 
 			}
-		} else {
-			// theyve released the input, so unlock
-			inputLocked = false;
 		}
 	}
 
@@ -140,7 +163,8 @@ public class BoardController : MonoBehaviour {
 			objectInstances = new List<GameObject>();
 
 			lastSmashSoundIdx = -1;
-			inputLocked = false;
+			inputDown = false;
+			targetCube = null;
 
 			initLevel(currentLevelIdx);
 		}
@@ -156,7 +180,11 @@ public class BoardController : MonoBehaviour {
 		Vector3 res;
 
 		if(isOnMobileDevice) {
-			res = Input.GetTouch(0).position;
+			if(Input.touchCount == 1) {
+				res = Input.GetTouch(0).position;
+				lastTouchInputPosition = Input.GetTouch(0).position;
+			}
+			res = lastTouchInputPosition;
 		} else {
 			res = Input.mousePosition;
 		}

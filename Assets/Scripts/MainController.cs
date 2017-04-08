@@ -34,7 +34,6 @@ public class MainController : MonoBehaviour {
 	private int lastSmashSoundIdx = -1;
 	private int currentLevelIdx = -1;
 
-	private List<GameObject> objectInstances = new List<GameObject>();
 	private List<GameObject> cubes = new List<GameObject>();
 
 	private GameObject targetCube = null;
@@ -86,8 +85,8 @@ public class MainController : MonoBehaviour {
 					}
 				}
 			}
-		// theyve released the input
-		else if(inputDown) {
+			// theyve released the input
+			else if(inputDown) {
 				// we get in here ONCE after user releases finger
 				inputDown = false;
 
@@ -99,7 +98,7 @@ public class MainController : MonoBehaviour {
 
 						// get cube's current position so we have it after it's destroyed
 						Vector3 cubePosition = targetCube.transform.position;
-					
+
 						for(int i = 0; i < cubes.Count; i++) {
 							if(cubes[i] != null
 							   && !cubes[i].Equals(targetCube)
@@ -109,7 +108,6 @@ public class MainController : MonoBehaviour {
 							}
 						}
 
-						cubes.Remove(targetCube);
 						Destroy(targetCube);
 						generateCubeParticles(cubePosition);
 						generateBlockDestroySound(cubePosition);
@@ -148,7 +146,7 @@ public class MainController : MonoBehaviour {
 
 	void generateCubeParticles(Vector3 pos) {
 		for(int i = 0; i < CUBE_PARTICLE_COUNT; i++) {
-			objectInstances.Add(Instantiate(cubeParticlePrefab, pos, Quaternion.identity));
+			Instantiate(cubeParticlePrefab, pos, Quaternion.identity);
 		}
 	}
 
@@ -178,7 +176,6 @@ public class MainController : MonoBehaviour {
 	void initLevel(int levelIdx) {
 		for(int i = 0; i < 5; i++) {
 			GameObject newCube = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
-			objectInstances.Add(newCube);
 			cubes.Add(newCube);
 		}
 		currentLevelIdx = levelIdx;
@@ -186,19 +183,9 @@ public class MainController : MonoBehaviour {
 
 	public void resetLevel() {
 		if(currentLevelIdx != -1) {
-			
-			for(int i = 0; i < objectInstances.Count; i++) {
-				GameObject obj = objectInstances[i];
-				objectInstances.Remove(obj);
-				Destroy(obj);
-			}
-
 			for(int i = 0; i < cubes.Count; i++) {
-				GameObject cube = cubes[i];
-				cubes.Remove(cube);
-				Destroy(cube);
+				Destroy(cubes[i]);
 			}
-			objectInstances = new List<GameObject>();
 			cubes = new List<GameObject>();
 
 			lastSmashSoundIdx = -1;

@@ -224,7 +224,7 @@ public class MainController : MonoBehaviour {
 		Vector3 res;
 
 		if(isOnMobileDevice) {
-			if(Input.touchCount == 1) {
+			if(Input.touchCount >= 1) {
 				res = Input.GetTouch(0).position;
 				lastTouchInputPosition = Input.GetTouch(0).position;
 			}
@@ -245,7 +245,7 @@ public class MainController : MonoBehaviour {
 		bool isInputDown = false;
 
 		if(isOnMobileDevice) {
-			isInputDown = Input.touchCount == 1;
+			isInputDown = Input.touchCount >= 1;
 		} else {
 			isInputDown = Input.GetMouseButton(0);
 		}

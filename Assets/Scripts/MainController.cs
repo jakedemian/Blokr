@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class MainController : MonoBehaviour {
 	/////////////////////////////////////////////////
@@ -32,7 +33,7 @@ public class MainController : MonoBehaviour {
 
 	public List<AudioClip> blockSmashSounds;
 	private int lastSmashSoundIdx = -1;
-	private int currentLevelIdx = -1;
+	private int currentLevelIdx = 0;
 
 	private List<GameObject> cubes = new List<GameObject>();
 
@@ -52,8 +53,10 @@ public class MainController : MonoBehaviour {
 		// TODO FIXME this should probably be done in initLevel()
 		createGameBoard();
 
-		// TODO FIXME make level loading dynamic
-		initLevel(0);
+		// FIXME in another function like onWake() or something i need to pull some info out
+		// the device's storage, including the level they're currently on
+
+		initLevel(currentLevelIdx);
 	}
 
 	/**
@@ -176,27 +179,18 @@ public class MainController : MonoBehaviour {
 	}
 
 	void initLevel(int levelIdx) {
-		for(int i = 0; i < 5; i++) {
-			GameObject newCube = Instantiate(cubePrefab, new Vector3(1f, (float)i + 0.5f, 1f), Quaternion.identity);
+		string levelJsonName = "level_" + levelIdx;
+		TextAsset asset = Resources.Load(Path.Combine("Data", levelJsonName)) as TextAsset;
+		Level lvl = JsonUtility.FromJson<Level>(asset.text);
+
+		for(int i = 0; i < lvl.cubes.Length; i++) {
+			Cube c = lvl.cubes[i];
+			GameObject newCube = Instantiate(cubePrefab, new Vector3(c.x, c.y, c.z), Quaternion.identity);
+
+			// TODO FIXME set the cube's type from c.type, but right now all cubes are the same
+
 			cubes.Add(newCube);
-			GameObject newCube2 = Instantiate(cubePrefab, new Vector3(1f, (float)i + 0.5f, 2f), Quaternion.identity);
-			cubes.Add(newCube2);
-			GameObject newCube3 = Instantiate(cubePrefab, new Vector3(1f, (float)i + 0.5f, 3f), Quaternion.identity);
-			cubes.Add(newCube3);
-			GameObject newCube4 = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 1f), Quaternion.identity);
-			cubes.Add(newCube4);
-			GameObject newCube5 = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
-			cubes.Add(newCube5);
-			GameObject newCube6 = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 3f), Quaternion.identity);
-			cubes.Add(newCube6);
-			GameObject newCube7 = Instantiate(cubePrefab, new Vector3(3f, (float)i + 0.5f, 1f), Quaternion.identity);
-			cubes.Add(newCube7);
-			GameObject newCube8 = Instantiate(cubePrefab, new Vector3(3f, (float)i + 0.5f, 2f), Quaternion.identity);
-			cubes.Add(newCube8);
-			GameObject newCube9 = Instantiate(cubePrefab, new Vector3(3f, (float)i + 0.5f, 3f), Quaternion.identity);
-			cubes.Add(newCube9);
 		}
-		currentLevelIdx = levelIdx;
 	}
 
 	public void resetLevel() {

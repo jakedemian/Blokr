@@ -65,56 +65,70 @@ public class MainController : MonoBehaviour {
 	}
 
 	void handleCubeTargeting() {
-		// if theyre currently holding down the input
-		if(isInputDown()) {
-			Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
-			RaycastHit hit;
+		if(allBlocksAreStopped()) {
+			// if theyre currently holding down the input
+			if(isInputDown()) {
+				Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
+				RaycastHit hit;
 
-			if(!inputDown) {
-				inputDown = true;
-				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
-					targetCube = hit.collider.gameObject;
-					targetCube.GetComponent<CubeController>().targeted = true;
-				}
-			} else if(targetCube != null) {
-				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
-					GameObject obj = hit.collider.gameObject;
-					targetCube.GetComponent<CubeController>().targeted = obj.Equals(targetCube);
-				} else { 
-					targetCube.GetComponent<CubeController>().targeted = false;
+				if(!inputDown) {
+					inputDown = true;
+					if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
+						targetCube = hit.collider.gameObject;
+						targetCube.GetComponent<CubeController>().targeted = true;
+					}
+				} else if(targetCube != null) {
+					if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
+						GameObject obj = hit.collider.gameObject;
+						targetCube.GetComponent<CubeController>().targeted = obj.Equals(targetCube);
+					} else { 
+						targetCube.GetComponent<CubeController>().targeted = false;
+					}
 				}
 			}
-		}
 		// theyve released the input
 		else if(inputDown) {
-			// we get in here ONCE after user releases finger
-			inputDown = false;
+				// we get in here ONCE after user releases finger
+				inputDown = false;
 
-			Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
-			RaycastHit hit;
+				Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
+				RaycastHit hit;
 
-			if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
-				if(hit.collider.gameObject.Equals(targetCube)) {
+				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
+					if(hit.collider.gameObject.Equals(targetCube)) {
 
-					// get cube's current position so we have it after it's destroyed
-					Vector3 cubePosition = targetCube.transform.position;
+						// get cube's current position so we have it after it's destroyed
+						Vector3 cubePosition = targetCube.transform.position;
 					
-					for(int i = 0; i < cubes.Count; i++) {
-						if(cubes[i] != null
-						   && !cubes[i].Equals(targetCube)
-						   && cubes[i].transform.position.y > targetCube.transform.position.y) {
-							Rigidbody rb = cubes[i].GetComponent<Rigidbody>();
-							rb.velocity = new Vector3(rb.velocity.x, blockFallSpeed, rb.velocity.z);
+						for(int i = 0; i < cubes.Count; i++) {
+							if(cubes[i] != null
+							   && !cubes[i].Equals(targetCube)
+							   && cubes[i].transform.position.y > targetCube.transform.position.y) {
+								Rigidbody rb = cubes[i].GetComponent<Rigidbody>();
+								rb.velocity = new Vector3(rb.velocity.x, blockFallSpeed, rb.velocity.z);
+							}
 						}
+
+						Destroy(targetCube);
+						generateCubeParticles(cubePosition);
+						generateBlockDestroySound(cubePosition);
 					}
 
-					Destroy(targetCube);
-					generateCubeParticles(cubePosition);
-					generateBlockDestroySound(cubePosition);
 				}
-
 			}
 		}
+	}
+
+	bool allBlocksAreStopped() {
+		// TODO I need to POSSIBLY also ensure that no particles exist
+		bool allBlocksAreStopped = true;
+		for(int i = 0; i < cubes.Count; i++) {
+			if(cubes[i] != null && cubes[i].GetComponent<Rigidbody>().velocity.y != 0) {
+				allBlocksAreStopped = false;
+				break;
+			}
+		}
+		return allBlocksAreStopped;
 	}
 
 	void generateBlockDestroySound(Vector3 sourcePos) {

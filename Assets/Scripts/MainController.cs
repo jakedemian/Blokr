@@ -102,7 +102,9 @@ public class MainController : MonoBehaviour {
 						for(int i = 0; i < cubes.Count; i++) {
 							if(cubes[i] != null
 							   && !cubes[i].Equals(targetCube)
-							   && cubes[i].transform.position.y > targetCube.transform.position.y) {
+							   && cubes[i].transform.position.y > targetCube.transform.position.y
+							   && cubes[i].transform.position.x == targetCube.transform.position.x
+							   && cubes[i].transform.position.z == targetCube.transform.position.z) {
 								Rigidbody rb = cubes[i].GetComponent<Rigidbody>();
 								rb.velocity = new Vector3(rb.velocity.x, blockFallSpeed, rb.velocity.z);
 							}
@@ -175,8 +177,24 @@ public class MainController : MonoBehaviour {
 
 	void initLevel(int levelIdx) {
 		for(int i = 0; i < 5; i++) {
-			GameObject newCube = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
+			GameObject newCube = Instantiate(cubePrefab, new Vector3(1f, (float)i + 0.5f, 1f), Quaternion.identity);
 			cubes.Add(newCube);
+			GameObject newCube2 = Instantiate(cubePrefab, new Vector3(1f, (float)i + 0.5f, 2f), Quaternion.identity);
+			cubes.Add(newCube2);
+			GameObject newCube3 = Instantiate(cubePrefab, new Vector3(1f, (float)i + 0.5f, 3f), Quaternion.identity);
+			cubes.Add(newCube3);
+			GameObject newCube4 = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 1f), Quaternion.identity);
+			cubes.Add(newCube4);
+			GameObject newCube5 = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 2f), Quaternion.identity);
+			cubes.Add(newCube5);
+			GameObject newCube6 = Instantiate(cubePrefab, new Vector3(2f, (float)i + 0.5f, 3f), Quaternion.identity);
+			cubes.Add(newCube6);
+			GameObject newCube7 = Instantiate(cubePrefab, new Vector3(3f, (float)i + 0.5f, 1f), Quaternion.identity);
+			cubes.Add(newCube7);
+			GameObject newCube8 = Instantiate(cubePrefab, new Vector3(3f, (float)i + 0.5f, 2f), Quaternion.identity);
+			cubes.Add(newCube8);
+			GameObject newCube9 = Instantiate(cubePrefab, new Vector3(3f, (float)i + 0.5f, 3f), Quaternion.identity);
+			cubes.Add(newCube9);
 		}
 		currentLevelIdx = levelIdx;
 	}

@@ -15,7 +15,7 @@ public class MainController : MonoBehaviour {
 
 	/////////////////////////////////////////////////
 	// CONSTANTS
-	private const float CUBE_PARTICLE_COUNT = 35;
+	private const float CUBE_PARTICLE_COUNT = 20;
 	/////////////////////////////////////////////////
 	// PRIVATE MEMBERS
 
@@ -32,7 +32,10 @@ public class MainController : MonoBehaviour {
 	public GameObject cubeParticlePrefab;
 
 	public List<AudioClip> blockSmashSounds;
-	private int lastSmashSoundIdx = -1;
+	private int lastCubeSmashSoundIdx = -1;
+
+	public AudioClip bombSmashSound;
+
 	private int currentLevelIdx = 0;
 
 	private List<GameObject> cubes = new List<GameObject>();
@@ -41,7 +44,7 @@ public class MainController : MonoBehaviour {
 
 	private Vector2 lastTouchInputPosition = new Vector2(0f, 0f);
 
-	public float blockFallSpeed = -5f;
+	private float blockFallSpeed = -10f;
 
 	/**
 	 * START
@@ -64,6 +67,14 @@ public class MainController : MonoBehaviour {
 	 */
 	void Update() {
 		handleCubeTargeting();
+
+		// clean up the cubes list, there might be some null values in there somewhere
+		for(int i = 0; i < cubes.Count; i++) {
+			if(cubes[i] == null) {
+				cubes.RemoveAt(i);
+				i--;
+			}
+		}
 	}
 
 	void handleCubeTargeting() {
@@ -77,14 +88,14 @@ public class MainController : MonoBehaviour {
 					inputDown = true;
 					if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
 						targetCube = hit.collider.gameObject;
-						targetCube.GetComponent<CubeController>().targeted = true;
+						targetCube.GetComponent<CubeController>().setIsTargeted(true);
 					}
 				} else if(targetCube != null) {
 					if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
 						GameObject obj = hit.collider.gameObject;
-						targetCube.GetComponent<CubeController>().targeted = obj.Equals(targetCube);
+						targetCube.GetComponent<CubeController>().setIsTargeted(obj.Equals(targetCube));
 					} else { 
-						targetCube.GetComponent<CubeController>().targeted = false;
+						targetCube.GetComponent<CubeController>().setIsTargeted(false);
 					}
 				}
 			}
@@ -98,29 +109,82 @@ public class MainController : MonoBehaviour {
 
 				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
 					if(hit.collider.gameObject.Equals(targetCube)) {
-
-						// get cube's current position so we have it after it's destroyed
-						Vector3 cubePosition = targetCube.transform.position;
-
-						for(int i = 0; i < cubes.Count; i++) {
-							if(cubes[i] != null
-							   && !cubes[i].Equals(targetCube)
-							   && cubes[i].transform.position.y > targetCube.transform.position.y
-							   && cubes[i].transform.position.x == targetCube.transform.position.x
-							   && cubes[i].transform.position.z == targetCube.transform.position.z) {
-								Rigidbody rb = cubes[i].GetComponent<Rigidbody>();
-								rb.velocity = new Vector3(rb.velocity.x, blockFallSpeed, rb.velocity.z);
-							}
-						}
-
-						Destroy(targetCube);
-						generateCubeParticles(cubePosition);
-						generateBlockDestroySound(cubePosition);
+						destroyCubeWithCascade(targetCube);
 					}
-
 				}
 			}
 		}
+	}
+
+	void destroyCubeWithCascade(GameObject cube) {
+		string cubeType = cube.GetComponent<CubeController>().getType();
+		Vector3 cubePosition = targetCube.transform.position;
+
+		if(cubeType.Equals("Cube")) {
+			destroyCubeType(cube, cubePosition);
+		} else if(cubeType.Equals("Bomb")) {
+			destroyBombType(cube, cubePosition);
+		}
+	}
+
+	private void destroySingleCube(GameObject cube) {
+		// set all cubes above this cube to fall
+		Vector3 cubePos = cube.transform.position;
+		for(int i = 0; i < cubes.Count; i++) {
+			if(cubes[i] != null) {
+				Vector3 p = cubes[i].transform.position;
+
+				if(p.y > cubePos.y && p.x == cubePos.x && p.z == cubePos.z) {
+					Rigidbody rb = cubes[i].GetComponent<Rigidbody>();
+					if(rb.velocity.y == 0f) {
+						rb.velocity = new Vector3(rb.velocity.x, blockFallSpeed, rb.velocity.z);
+					}
+				}
+			}
+		}
+
+		for(int i = 0; i < cubes.Count; i++) {
+			if(cubes[i] != null && cubes[i].Equals(cube)) {
+				Destroy(cubes[i]);
+
+				// set to null, will be removed at the end of Update()
+				cubes[i] = null;
+			}
+		}
+	}
+
+	void destroyCubeType(GameObject cube, Vector3 cubePosition) {
+		// get cube's current position so we have it after it's destroyed
+		destroySingleCube(cube);
+		generateCubeParticles(cubePosition);
+		generateBlockDestroySound(cubePosition);
+	}
+
+	void destroyBombType(GameObject cube, Vector3 cubePosition) {
+		destroySingleCube(cube);
+
+		Camera.main.GetComponent<CameraMovement>().shakeCamera();
+
+		// TODO FIXME this should be different
+		generateCubeParticles(cubePosition, cube.GetComponent<CubeController>().bombMaterial);
+		AudioSource.PlayClipAtPoint(bombSmashSound, cubePosition);
+
+		for(int i = 0; i < cubes.Count; i++) {
+			if(cubes[i] != null) {
+				GameObject thisCube = cubes[i];
+				Vector3 thisPos = thisCube.transform.position;
+
+				int maxDistance = 1;
+				if((int)Mathf.Sqrt(
+					   Mathf.Pow(cubePosition.x - thisPos.x, 2) +
+					   Mathf.Pow(cubePosition.y - thisPos.y, 2) +
+					   Mathf.Pow(cubePosition.z - thisPos.z, 2)
+				   ) <= maxDistance) {
+					destroyCubeWithCascade(thisCube);
+				}
+			}
+		}
+
 	}
 
 	bool allBlocksAreStopped() {
@@ -138,7 +202,7 @@ public class MainController : MonoBehaviour {
 	void generateBlockDestroySound(Vector3 sourcePos) {
 		int soundIdx = Random.Range(0, blockSmashSounds.Count - 1);
 
-		if(soundIdx == lastSmashSoundIdx) {
+		if(soundIdx == lastCubeSmashSoundIdx) {
 			soundIdx++;
 			if(soundIdx >= blockSmashSounds.Count) {
 				soundIdx = 0;
@@ -146,12 +210,15 @@ public class MainController : MonoBehaviour {
 		}
 
 		AudioSource.PlayClipAtPoint(blockSmashSounds[soundIdx], sourcePos);
-		lastSmashSoundIdx = soundIdx;
+		lastCubeSmashSoundIdx = soundIdx;
 	}
 
-	void generateCubeParticles(Vector3 pos) {
+	void generateCubeParticles(Vector3 pos, Material particleMaterial = null) {
 		for(int i = 0; i < CUBE_PARTICLE_COUNT; i++) {
-			Instantiate(cubeParticlePrefab, pos, Quaternion.identity);
+			GameObject particle = Instantiate(cubeParticlePrefab, pos, Quaternion.identity);
+			if(particleMaterial != null) {
+				particle.GetComponent<Renderer>().material = particleMaterial;
+			}
 		}
 	}
 
@@ -187,8 +254,10 @@ public class MainController : MonoBehaviour {
 			Cube c = lvl.cubes[i];
 			GameObject newCube = Instantiate(cubePrefab, new Vector3(c.x, c.y, c.z), Quaternion.identity);
 
-			// TODO FIXME set the cube's type from c.type, but right now all cubes are the same
+			//set the cube type
+			newCube.GetComponent<CubeController>().setType(c.type);
 
+			// add the cube to our stored list of cube GameObjects
 			cubes.Add(newCube);
 		}
 	}
@@ -200,7 +269,7 @@ public class MainController : MonoBehaviour {
 			}
 			cubes = new List<GameObject>();
 
-			lastSmashSoundIdx = -1;
+			lastCubeSmashSoundIdx = -1;
 			inputDown = false;
 			targetCube = null;
 
@@ -245,6 +314,11 @@ public class MainController : MonoBehaviour {
 		}
 
 		return isInputDown;
+	}
+
+	public void goToLevel(int lvlIdx) {
+		this.currentLevelIdx = lvlIdx;
+		resetLevel();
 	}
 
 

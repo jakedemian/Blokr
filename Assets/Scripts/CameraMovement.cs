@@ -17,6 +17,12 @@ public class CameraMovement : MonoBehaviour {
 	private float cameraStartingYPos;
 	private float maxCameraYPos;
 
+	private float shakeTimer = 0f;
+	private Vector3 shakeStartingPos = Vector3.zero;
+	private const float SHAKE_STRENGTH = 0.2f;
+	private const float MAX_SHAKE_OFFSET = 0.1f;
+	private const float SHAKE_DURATION = 0.7f;
+
 	/**
 	 * START
 	 **/
@@ -46,6 +52,46 @@ public class CameraMovement : MonoBehaviour {
 
 	}
 
+	void FixedUpdate() {
+		if(shakeTimer != 0f) {
+			if(shakeStartingPos == Vector3.zero) {
+				shakeStartingPos = transform.position;
+			}
+
+			float percentComplete = 1 - (shakeTimer / SHAKE_DURATION);         
+			float damper = 1.0f - percentComplete;
+
+			float proposedX = transform.position.x + (Random.Range(-SHAKE_STRENGTH, SHAKE_STRENGTH) * damper);
+			float proposedY = transform.position.y + (Random.Range(-SHAKE_STRENGTH, SHAKE_STRENGTH) * damper);
+			float proposedZ = transform.position.z + (Random.Range(-SHAKE_STRENGTH, SHAKE_STRENGTH) * damper);
+
+			if(Mathf.Abs(Mathf.Abs(shakeStartingPos.x) - Mathf.Abs(proposedX)) > MAX_SHAKE_OFFSET) {
+				proposedX = transform.position.x;
+			}
+			if(Mathf.Abs(Mathf.Abs(shakeStartingPos.y) - Mathf.Abs(proposedY)) > MAX_SHAKE_OFFSET) {
+				proposedY = transform.position.y;
+			}
+			if(Mathf.Abs(Mathf.Abs(shakeStartingPos.z) - Mathf.Abs(proposedZ)) > MAX_SHAKE_OFFSET) {
+				proposedZ = transform.position.z;
+			}
+
+
+			transform.position = new Vector3(
+				proposedX,
+				proposedY,
+				proposedZ
+			);
+	
+			shakeTimer -= Time.deltaTime;
+
+			if(shakeTimer <= 0f) {
+				shakeTimer = 0f;
+				transform.position = shakeStartingPos;
+				shakeStartingPos = Vector3.zero;
+			}
+		}
+	}
+
 	/**
 	 * LATE UPDATE
 	 */
@@ -53,8 +99,11 @@ public class CameraMovement : MonoBehaviour {
 		Vector3 focalPoint = new Vector3(target.position.x, 
 			                     target.position.y + verticalPanOffset, 
 			                     target.position.z);
-		
-		transform.LookAt(focalPoint);
+
+		// don't want to be focusing on anything while the camera is shaking
+		if(shakeTimer == 0f) {
+			transform.LookAt(focalPoint);
+		}
 	}
 
 	/**
@@ -123,6 +172,8 @@ public class CameraMovement : MonoBehaviour {
 	}
 
 
-
+	public void shakeCamera() {
+		shakeTimer = SHAKE_DURATION;
+	}
 
 }

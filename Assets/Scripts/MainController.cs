@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.IO;
 
 public class MainController : MonoBehaviour {
@@ -46,6 +47,24 @@ public class MainController : MonoBehaviour {
 
 	private float blockFallSpeed = -10f;
 
+	private Level level;
+	private int moves;
+
+	public Text guiMoveCount;
+	public Text loseText;
+	public Text winText;
+	public Button resetButton;
+	public Button nextLevelButton;
+
+	public GameObject loseUIGroup;
+	public GameObject winUIGroup;
+
+	private GameObject loseRetryButton;
+	private GameObject winNextLevelButton;
+
+	private bool touchLockedAfterReset = false;
+
+
 	/**
 	 * START
 	 */
@@ -53,13 +72,15 @@ public class MainController : MonoBehaviour {
 		isOnMobileDevice = Application.platform == RuntimePlatform.Android
 		|| Application.platform == RuntimePlatform.IPhonePlayer;
 
-		// TODO FIXME this should probably be done in initLevel()
+		// TODO move this into init, doesn't really belong here BUT you need to delete
+		// all of the grid squares on reset if you move it there
 		createGameBoard();
 
-		// FIXME in another function like onWake() or something i need to pull some info out
+		// TODO in another function like onWake() or something i need to pull some info out
 		// the device's storage, including the level they're currently on
-
 		initLevel(currentLevelIdx);
+
+		initUiElements();
 	}
 
 	/**
@@ -77,10 +98,67 @@ public class MainController : MonoBehaviour {
 		}
 	}
 
+	void OnGUI() {
+		guiMoveCount.text = moves.ToString();
+
+		int cubesLeft = 0;
+		for(int i = 0; i < cubes.Count; i++) {
+			if(cubes[i] != null) {
+				cubesLeft++;
+			}
+		}
+
+		if(moves <= 0) {
+			if(cubesLeft > 0) {
+				// you lose :(
+				loseUIGroup.SetActive(true);
+			} else {
+				// you win!
+				winUIGroup.SetActive(true);
+			}
+		} else if(cubesLeft == 0) {
+			winUIGroup.SetActive(true);
+		}
+	}
+
+	void initUiElements() {
+		Vector2 screenDimensions = new Vector2(Screen.width, Screen.height);
+		float dpi = Screen.dpi;
+
+		Vector2 midPoint = new Vector2(screenDimensions.x / 2, screenDimensions.y / 2);
+		float fontScalingFactor = dpi / 4.5f;
+
+		// main text displays
+		loseText.fontSize = (int)fontScalingFactor;
+		winText.fontSize = (int)fontScalingFactor;
+
+		Vector2 mainTxtPos = new Vector2(midPoint.x, midPoint.y + (screenDimensions.y / 5));
+		loseText.transform.position = mainTxtPos;
+		winText.transform.position = mainTxtPos;
+
+		// Buttons
+		loseRetryButton = loseUIGroup.transform.FindChild("RetryButton").gameObject;
+		loseRetryButton.transform.position = new Vector2(
+			loseRetryButton.transform.position.x,
+			midPoint.y + (screenDimensions.y / 5) - (3 * loseText.fontSize));
+
+		winNextLevelButton = winUIGroup.transform.FindChild("NextButton").gameObject;
+		winNextLevelButton.transform.position = new Vector2(
+			winNextLevelButton.transform.position.x,
+			midPoint.y + (screenDimensions.y / 5) - (3 * winText.fontSize));
+
+		// button scale factor
+		float buttonScaleFactor = dpi / 48f;
+
+		resetButton.transform.localScale = new Vector2(buttonScaleFactor, buttonScaleFactor);
+		loseRetryButton.transform.localScale = new Vector2(buttonScaleFactor, buttonScaleFactor);
+		winNextLevelButton.transform.localScale = new Vector2(buttonScaleFactor, buttonScaleFactor);
+	}
+
 	void handleCubeTargeting() {
-		if(allBlocksAreStopped()) {
+		if(allBlocksAreStopped() && moves > 0) {
 			// if theyre currently holding down the input
-			if(isInputDown()) {
+			if(isInputDown() && !touchLockedAfterReset) {
 				Ray ray = Camera.main.ScreenPointToRay(getInputPosition());
 				RaycastHit hit;
 
@@ -100,7 +178,7 @@ public class MainController : MonoBehaviour {
 				}
 			}
 			// theyve released the input
-			else if(inputDown) {
+			else if(inputDown && !touchLockedAfterReset) {
 				// we get in here ONCE after user releases finger
 				inputDown = false;
 
@@ -109,9 +187,12 @@ public class MainController : MonoBehaviour {
 
 				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
 					if(hit.collider.gameObject.Equals(targetCube)) {
+						this.moves--;
 						destroyCubeWithCascade(targetCube);
 					}
 				}
+			} else if(touchLockedAfterReset) {
+				touchLockedAfterReset = false;
 			}
 		}
 	}
@@ -236,11 +317,6 @@ public class MainController : MonoBehaviour {
 				newSquare.GetComponent<BoardSquareController>().gridX = i;
 				newSquare.GetComponent<BoardSquareController>().gridY = j;
 				grid[i].Add(newSquare);
-
-				// FIXME setting the camera focal point should be done in the camera movement script, not here. the camera obj should store 
-				// the vertical offset from this object, rather than directly use this objects current position
-				// set the position of the controller
-				transform.position = new Vector3(2f, 3f, 2f);
 			}
 		}
 	}
@@ -248,10 +324,14 @@ public class MainController : MonoBehaviour {
 	void initLevel(int levelIdx) {
 		string levelJsonName = "level_" + levelIdx;
 		TextAsset asset = Resources.Load(Path.Combine("Data", levelJsonName)) as TextAsset;
-		Level lvl = JsonUtility.FromJson<Level>(asset.text);
+		this.level = JsonUtility.FromJson<Level>(asset.text);
+		this.moves = level.moves;
 
-		for(int i = 0; i < lvl.cubes.Length; i++) {
-			Cube c = lvl.cubes[i];
+		loseUIGroup.SetActive(false);
+		winUIGroup.SetActive(false);
+
+		for(int i = 0; i < level.cubes.Length; i++) {
+			Cube c = level.cubes[i];
 			GameObject newCube = Instantiate(cubePrefab, new Vector3(c.x, c.y, c.z), Quaternion.identity);
 
 			//set the cube type
@@ -272,10 +352,10 @@ public class MainController : MonoBehaviour {
 			lastCubeSmashSoundIdx = -1;
 			inputDown = false;
 			targetCube = null;
+			touchLockedAfterReset = true;
 
 			initLevel(currentLevelIdx);
 		}
-
 	}
 
 	/**
@@ -318,6 +398,12 @@ public class MainController : MonoBehaviour {
 
 	public void goToLevel(int lvlIdx) {
 		this.currentLevelIdx = lvlIdx;
+		resetLevel();
+	}
+
+	public void goToNextLevel() {
+		// FIXME this needs to be smarter and not blindly go to the next level without thinking
+		this.currentLevelIdx++;
 		resetLevel();
 	}
 

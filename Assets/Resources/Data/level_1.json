@@ -1,0 +1,13 @@
+{
+	"id": 0,
+	"numOfLayers": 1,
+	"moves": 2,
+	"cubes": [
+		{
+			"x": 2.0,
+			"y": 0.5,
+			"z": 2.0,
+			"type": "Cube"
+		}
+	]
+}

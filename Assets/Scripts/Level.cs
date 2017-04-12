@@ -6,6 +6,7 @@ using UnityEngine;
 public class Level {
 	public int id;
 	public int numOfLayers;
+	public int moves;
 	public Cube[] cubes;
 }
 

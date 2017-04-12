@@ -1,6 +1,7 @@
 {
 	"id": 0,
 	"numOfLayers": 1,
+	"moves": 2,
 	"cubes": [
 		{
 			"x": 2.0,

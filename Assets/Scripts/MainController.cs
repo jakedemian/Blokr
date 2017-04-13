@@ -50,6 +50,7 @@ public class MainController : MonoBehaviour {
 	private Level level;
 	private int moves;
 
+	public Text guiMoveLabelText;
 	public Text guiMoveCount;
 	public Text loseText;
 	public Text winText;
@@ -131,6 +132,8 @@ public class MainController : MonoBehaviour {
 		// main text displays
 		loseText.fontSize = (int)fontScalingFactor;
 		winText.fontSize = (int)fontScalingFactor;
+		guiMoveLabelText.fontSize = (int)fontScalingFactor;
+		guiMoveCount.fontSize = (int)fontScalingFactor;
 
 		Vector2 mainTxtPos = new Vector2(midPoint.x, midPoint.y + (screenDimensions.y / 5));
 		loseText.transform.position = mainTxtPos;

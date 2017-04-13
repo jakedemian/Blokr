@@ -5,37 +5,59 @@ using UnityEngine.UI;
 using System.IO;
 
 public class MainController : MonoBehaviour {
-	/////////////////////////////////////////////////
-	// PUBLIC
-
+	
+	/***************************
+	* PUBLIC MEMBERS
+	***************************/
 	// Prefab for board square
 	public GameObject boardSquarePrefab;
 
 	// prefab for placed cube
 	public GameObject cubePrefab;
 
-	/////////////////////////////////////////////////
-	// CONSTANTS
-	private const float CUBE_PARTICLE_COUNT = 20;
-	/////////////////////////////////////////////////
-	// PRIVATE MEMBERS
-
-	// true if user is on a mobile device, false if on desktop
-	private bool isOnMobileDevice;
-
-	// a 2d list of all grid square GameObjects
-	private List<List<GameObject>> grid;
-
-	private int RAYCAST_LAYER = 1 << 8;
-
-	private bool inputDown = false;
-
 	public GameObject cubeParticlePrefab;
 
 	public List<AudioClip> blockSmashSounds;
-	private int lastCubeSmashSoundIdx = -1;
 
 	public AudioClip bombSmashSound;
+
+	public Text guiMoveLabelText;
+
+	public Text guiMoveCount;
+
+	public Text loseText;
+
+	public Text winText;
+
+	public Button resetButton;
+
+	public Button nextLevelButton;
+
+	public GameObject loseUIGroup;
+
+	public GameObject winUIGroup;
+
+	/***************************
+	* CONSTANTS
+	***************************/
+	// true if user is on a mobile device, false if on desktop
+	private bool isOnMobileDevice;
+
+	private const float CUBE_PARTICLE_COUNT = 20;
+	private float FONT_SCALING_FACTOR;
+	private float BUTTON_SCALING_FACTOR;
+	private const float blockFallSpeed = -10f;
+	private int RAYCAST_LAYER = 1 << 8;
+
+	/***************************
+	* PRIVATE MEMBERS
+	***************************/
+	// a 2d list of all grid square GameObjects
+	private List<List<GameObject>> grid;
+
+	private bool inputDown = false;
+
+	private int lastCubeSmashSoundIdx = -1;
 
 	private int currentLevelIdx = 0;
 
@@ -45,26 +67,38 @@ public class MainController : MonoBehaviour {
 
 	private Vector2 lastTouchInputPosition = new Vector2(0f, 0f);
 
-	private float blockFallSpeed = -10f;
-
 	private Level level;
+
 	private int moves;
-
-	public Text guiMoveLabelText;
-	public Text guiMoveCount;
-	public Text loseText;
-	public Text winText;
-	public Button resetButton;
-	public Button nextLevelButton;
-
-	public GameObject loseUIGroup;
-	public GameObject winUIGroup;
-
-	private GameObject loseRetryButton;
-	private GameObject winNextLevelButton;
 
 	private bool touchLockedAfterReset = false;
 
+
+	/*
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 					TODO
+	 * 
+	 * 
+	 * 
+	 * 					keep cleaning this file up.  comments for every member variable and method.
+	 * 					look for reused pieces of code and extract into functions.
+	 * 					look for outdated code i dont use or i meant to clean up
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * /
 
 	/**
 	 * START
@@ -72,6 +106,10 @@ public class MainController : MonoBehaviour {
 	void Start() {
 		isOnMobileDevice = Application.platform == RuntimePlatform.Android
 		|| Application.platform == RuntimePlatform.IPhonePlayer;
+
+		// init UI values
+		FONT_SCALING_FACTOR = Screen.dpi / 4.5f;
+		BUTTON_SCALING_FACTOR = Screen.dpi / 48f;
 
 		// TODO move this into init, doesn't really belong here BUT you need to delete
 		// all of the grid squares on reset if you move it there
@@ -99,6 +137,9 @@ public class MainController : MonoBehaviour {
 		}
 	}
 
+	/**
+	 * ON GUI
+	 */
 	void OnGUI() {
 		guiMoveCount.text = moves.ToString();
 
@@ -121,50 +162,42 @@ public class MainController : MonoBehaviour {
 			winUIGroup.SetActive(true);
 		}
 
-		Vector2 screenDimensions = new Vector2(Screen.width, Screen.height);
-		float dpi = Screen.dpi;
-
-		Vector2 midPoint = new Vector2(screenDimensions.x / 2, screenDimensions.y / 2);
-		float fontScalingFactor = dpi / 4.5f;
-		guiMoveCount.transform.position = new Vector2(screenDimensions.x * 0.22f, screenDimensions.y * 0.95f);
+		// keep the move counter in the correct position
+		guiMoveCount.transform.position = new Vector2(
+			ScreenHelper.getScreenDimensions().x * 0.22f,
+			ScreenHelper.getScreenDimensions().y * 0.95f
+		);
 	}
 
 	void initUiElements() {
-		Vector2 screenDimensions = new Vector2(Screen.width, Screen.height);
-		float dpi = Screen.dpi;
+		// init the font size of all text
+		loseText.fontSize = (int)FONT_SCALING_FACTOR;
+		winText.fontSize = (int)FONT_SCALING_FACTOR;
+		guiMoveCount.fontSize = (int)FONT_SCALING_FACTOR;
 
-		Vector2 midPoint = new Vector2(screenDimensions.x / 2, screenDimensions.y / 2);
-		float fontScalingFactor = dpi / 4.5f;
+		// init items that are centered on the screen
+		initCenteredUIElement(loseText.gameObject, 0);
+		initCenteredUIElement(winText.gameObject, 0);
+		initCenteredUIElement(loseUIGroup.transform.FindChild("RetryButton").gameObject, 3 * loseText.fontSize);
+		initCenteredUIElement(winUIGroup.transform.FindChild("NextButton").gameObject, 3 * winText.fontSize);
 
-		// main text displays
-		loseText.fontSize = (int)fontScalingFactor;
-		winText.fontSize = (int)fontScalingFactor;
+		// init the scale of all buttons
+		initButtonScale(resetButton.gameObject);
+		initButtonScale(loseUIGroup.transform.FindChild("RetryButton").gameObject);
+		initButtonScale(winUIGroup.transform.FindChild("NextButton").gameObject);
+	}
 
-		guiMoveCount.fontSize = (int)fontScalingFactor;
+	void initCenteredUIElement(GameObject go, int verticalOffset) {
+		go.transform.position = new Vector2(
+			go.transform.position.x,
+			ScreenHelper.getScreenMidpoint().y + (ScreenHelper.getScreenDimensions().y / 5) - verticalOffset
+		);
+	}
 
-		Debug.Log(guiMoveCount.GetComponent<RectTransform>().anchoredPosition.y);
-
-		Vector2 mainTxtPos = new Vector2(midPoint.x, midPoint.y + (screenDimensions.y / 5));
-		loseText.transform.position = mainTxtPos;
-		winText.transform.position = mainTxtPos;
-
-		// Buttons
-		loseRetryButton = loseUIGroup.transform.FindChild("RetryButton").gameObject;
-		loseRetryButton.transform.position = new Vector2(
-			loseRetryButton.transform.position.x,
-			midPoint.y + (screenDimensions.y / 5) - (3 * loseText.fontSize));
-
-		winNextLevelButton = winUIGroup.transform.FindChild("NextButton").gameObject;
-		winNextLevelButton.transform.position = new Vector2(
-			winNextLevelButton.transform.position.x,
-			midPoint.y + (screenDimensions.y / 5) - (3 * winText.fontSize));
-
-		// button scale factor
-		float buttonScaleFactor = dpi / 48f;
-
-		resetButton.transform.localScale = new Vector2(buttonScaleFactor, buttonScaleFactor);
-		loseRetryButton.transform.localScale = new Vector2(buttonScaleFactor, buttonScaleFactor);
-		winNextLevelButton.transform.localScale = new Vector2(buttonScaleFactor, buttonScaleFactor);
+	void initButtonScale(GameObject go) {
+		// TODO FIXME these should either be constants or this class or 
+		//     a helper should have getters for these
+		go.transform.localScale = new Vector2(BUTTON_SCALING_FACTOR, BUTTON_SCALING_FACTOR);
 	}
 
 	void handleCubeTargeting() {

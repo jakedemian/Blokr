@@ -120,6 +120,13 @@ public class MainController : MonoBehaviour {
 		} else if(cubesLeft == 0) {
 			winUIGroup.SetActive(true);
 		}
+
+		Vector2 screenDimensions = new Vector2(Screen.width, Screen.height);
+		float dpi = Screen.dpi;
+
+		Vector2 midPoint = new Vector2(screenDimensions.x / 2, screenDimensions.y / 2);
+		float fontScalingFactor = dpi / 4.5f;
+		guiMoveCount.transform.position = new Vector2(screenDimensions.x * 0.22f, screenDimensions.y * 0.95f);
 	}
 
 	void initUiElements() {
@@ -132,8 +139,10 @@ public class MainController : MonoBehaviour {
 		// main text displays
 		loseText.fontSize = (int)fontScalingFactor;
 		winText.fontSize = (int)fontScalingFactor;
-		guiMoveLabelText.fontSize = (int)fontScalingFactor;
+
 		guiMoveCount.fontSize = (int)fontScalingFactor;
+
+		Debug.Log(guiMoveCount.GetComponent<RectTransform>().anchoredPosition.y);
 
 		Vector2 mainTxtPos = new Vector2(midPoint.x, midPoint.y + (screenDimensions.y / 5));
 		loseText.transform.position = mainTxtPos;

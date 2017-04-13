@@ -23,6 +23,8 @@ public class CameraMovement : MonoBehaviour {
 	private const float MAX_SHAKE_OFFSET = 0.1f;
 	private const float SHAKE_DURATION = 0.7f;
 
+	public GameObject moveSpinningCube;
+
 	/**
 	 * START
 	 **/
@@ -32,12 +34,16 @@ public class CameraMovement : MonoBehaviour {
 
 		cameraStartingYPos = transform.position.y;
 		maxCameraYPos = cameraStartingYPos + MAX_Y_CAMERA_OFFSET;
+
 	}
 
 	/**
 	 * UPDATE
 	 **/
 	void Update() {
+		updateMoveCountCubePosition();
+		moveSpinningCube.transform.Rotate(new Vector3(35f * Time.deltaTime, 28f * Time.deltaTime, 40f * Time.deltaTime));
+
 		if(isInputDown()) {
 			Vector2 delta = getInputPos();
 			cameraOrbit(delta.x);
@@ -147,6 +153,8 @@ public class CameraMovement : MonoBehaviour {
 	*/
 	void cameraOrbit(float angle) {
 		transform.RotateAround(target.position, new Vector3(0f, 1f, 0f), angle * ORBIT_SPEED);
+
+		updateMoveCountCubePosition();
 	}
 
 
@@ -169,11 +177,18 @@ public class CameraMovement : MonoBehaviour {
 			transform.position.x,
 			cameraStartingYPos + verticalPanOffset,
 			transform.position.z);
+		
+		updateMoveCountCubePosition();
 	}
 
 
 	public void shakeCamera() {
 		shakeTimer = SHAKE_DURATION;
+	}
+
+	private void updateMoveCountCubePosition() {
+		Vector3 worldPoint = Camera.main.ViewportToWorldPoint(new Vector3(0.1f, 0.95f, 25f));
+		moveSpinningCube.transform.position = worldPoint;
 	}
 
 }

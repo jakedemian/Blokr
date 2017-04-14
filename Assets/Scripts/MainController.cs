@@ -96,32 +96,6 @@ public class MainController : MonoBehaviour {
 	// ensures that there are no debouncing problems when the user resets the level
 	private bool touchLockedAfterReset = false;
 
-
-	/*
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 					TODO
-	 * 
-	 * 
-	 * 
-	 * 					look for reused pieces of code and extract into functions.
-	 * 					look for outdated code i dont use or i meant to clean up
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * /
-
 	/**
 	 * START
 	 */

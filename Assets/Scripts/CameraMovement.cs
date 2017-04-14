@@ -4,26 +4,63 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour {
 
+	/***************************
+	* PUBLIC MEMBERS
+	***************************/
+	// The target object the camera will focus on at the end of each frame.
 	public Transform target;
 
-	private const float ORBIT_SPEED = 0.1f;
-	private const float VERTICAL_PAN_SPEED = 0.01f;
-	private const float MAX_Y_CAMERA_OFFSET = 3f;
+	// The spinning cube used to denote move count
+	public GameObject moveSpinningCube;
 
+
+	/***************************
+	* CONSTANTS
+	***************************/
+	// True if the user is on a mobile device, false otherwise
 	private bool isOnMobileDevice;
 
-	private Vector3 lastMousePos = new Vector3(0f, 0f, 0f);
-	private float verticalPanOffset = 0f;
-	private float cameraStartingYPos;
-	private float maxCameraYPos;
+	// Orbit speed scaling factor
+	private const float ORBIT_SPEED = 0.1f;
 
-	private float shakeTimer = 0f;
-	private Vector3 shakeStartingPos = Vector3.zero;
+	// Vertical pan speed scaling factor
+	private const float VERTICAL_PAN_SPEED = 0.01f;
+
+	// The maximum distance in units that the camera can pan upwards
+	private const float MAX_Y_CAMERA_OFFSET = 3f;
+
+	// The strength of the camera shake effect
 	private const float SHAKE_STRENGTH = 0.2f;
+
+	// The max cumulative distance the camera can move in any direction during a camera shake event
 	private const float MAX_SHAKE_OFFSET = 0.1f;
+
+	// Length of time in seconds for a camera shake event
 	private const float SHAKE_DURATION = 0.7f;
 
-	public GameObject moveSpinningCube;
+
+	/***************************
+	* PRIVATE MEMBERS
+	***************************/
+	// The position of the user input device, if any, on the previous frame
+	private Vector3 lastMousePos = new Vector3(0f, 0f, 0f);
+
+	// The difference between the minimum vertical pan amount and the current amount
+	private float verticalPanOffset = 0f;
+
+	// Starting y position of the camera
+	private float cameraStartingYPos;
+
+	// Maximum camera y position
+	private float maxCameraYPos;
+
+	// The current amount of time the camera has been shaking
+	private float shakeTimer = 0f;
+
+	// Starting location of the camera when beginning a camera shake event
+	private Vector3 shakeStartingPos = Vector3.zero;
+
+
 
 	/**
 	 * START
@@ -58,6 +95,9 @@ public class CameraMovement : MonoBehaviour {
 
 	}
 
+	/**
+	 * FIXED UPDATE
+	 */
 	void FixedUpdate() {
 		if(shakeTimer != 0f) {
 			if(shakeStartingPos == Vector3.zero) {
@@ -181,11 +221,16 @@ public class CameraMovement : MonoBehaviour {
 		updateMoveCountCubePosition();
 	}
 
-
+	/**
+	 * Begin a camera shake event.
+	 */
 	public void shakeCamera() {
 		shakeTimer = SHAKE_DURATION;
 	}
 
+	/**
+	 * Update the current position of the spinning cube.
+	 */
 	private void updateMoveCountCubePosition() {
 		Vector3 worldPoint = Camera.main.ViewportToWorldPoint(new Vector3(0.1f, 0.95f, 25f));
 		moveSpinningCube.transform.position = worldPoint;

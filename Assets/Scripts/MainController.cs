@@ -272,8 +272,12 @@ public class MainController : MonoBehaviour {
 
 				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
 					if(hit.collider.gameObject.Equals(targetCube)) {
-						decrementMoveCount(targetCube.GetComponent<CubeController>().getType());
-						destroyCubeWithCascade(targetCube);
+						if(decrementMoveCount(targetCube.GetComponent<CubeController>().getType())) {
+							destroyCubeWithCascade(targetCube);
+						} else {
+							targetCube.GetComponent<CubeController>().setIsTargeted(false);
+							targetCube = null;
+						}
 					}
 				}
 			} else if(touchLockedAfterReset) {
@@ -284,16 +288,28 @@ public class MainController : MonoBehaviour {
 
 	/**
 	 * Decrement the move counter depending on the type of cube being destroyed.
+	 * 
+	 * @param cubeType The target cube's type
 	 */
-	void decrementMoveCount(string cubeType) {
+	bool decrementMoveCount(string cubeType) {
+		bool success = false;
+		int currentMoves = this.moves;
+
 		if(cubeType.Equals("Cube")) {
-			this.moves--;
+			currentMoves--;
 		} else if(cubeType.Equals("Bomb")) {
-			this.moves -= 3;
+			currentMoves -= 3;
+		} else {
+			Debug.LogError("Invalid cube type was passed to decrementMoveCount()");
+			return false;
 		}
 
-		// don't let moves be below 0
-		this.moves = this.moves < 0 ? 0 : this.moves;
+		if(currentMoves >= 0) {
+			success = true;
+			this.moves = currentMoves;
+		}
+
+		return success;
 	}
 
 	/**
@@ -474,22 +490,28 @@ public class MainController : MonoBehaviour {
 	 */
 	void initLevel(int levelIdx) {
 		string levelJsonName = "level_" + levelIdx;
+
 		TextAsset asset = Resources.Load(Path.Combine("Data", levelJsonName)) as TextAsset;
-		this.level = JsonUtility.FromJson<Level>(asset.text);
-		this.moves = level.moves;
+		if(asset != null) {
+			this.level = JsonUtility.FromJson<Level>(asset.text);
+			this.moves = level.moves;
 
-		loseUIGroup.SetActive(false);
-		winUIGroup.SetActive(false);
 
-		for(int i = 0; i < level.cubes.Length; i++) {
-			Cube c = level.cubes[i];
-			GameObject newCube = Instantiate(cubePrefab, new Vector3(c.x, c.y, c.z), Quaternion.identity);
+			loseUIGroup.SetActive(false);
+			winUIGroup.SetActive(false);
 
-			//set the cube type
-			newCube.GetComponent<CubeController>().setType(c.type);
+			for(int i = 0; i < level.cubes.Length; i++) {
+				Cube c = level.cubes[i];
+				GameObject newCube = Instantiate(cubePrefab, new Vector3(c.x, c.y, c.z), Quaternion.identity);
 
-			// add the cube to our stored list of cube GameObjects
-			cubes.Add(newCube);
+				//set the cube type
+				newCube.GetComponent<CubeController>().setType(c.type);
+
+				// add the cube to our stored list of cube GameObjects
+				cubes.Add(newCube);
+			}
+		} else {
+			Debug.LogError("There was a problem loading the level with levelIdx=" + levelIdx);
 		}
 	}
 

@@ -4,30 +4,44 @@ using UnityEngine;
 
 public class CubeController : MonoBehaviour {
 
-	public bool transparent = false;
-
-	// type materials
+	/***************************
+	* PUBLIC MEMBERS
+	***************************/
+	// The material for a plain cube
 	public Material cubeMaterial;
+
+	// The material for a bomb cube
 	public Material bombMaterial;
+
+	// The material for a cube that is targeted
 	public Material targetedMaterial;
 
-	private Material currentMaterial;
-
-	private bool markedForDestroy = false;
-
+	// The sound played when a cube is targeted
 	public AudioClip targetSound;
+
+	// The sound played when a cube is untargeted
 	public AudioClip untargetSound;
 
+	/***************************
+	* PRIVATE MEMBERS
+	***************************/
+	// The material currently applied to this cube
+	private Material currentMaterial;
+
+	// True if this cube is targeted, false otherwise
 	private bool targeted = false;
+
+	// Denotes this cube's type (defaults to 'Cube')
 	private string type = "Cube";
 
+	// Debouncing boolean used for targeting
 	private bool targetDebouncer = false;
 
-	// Use this for initialization
-	void Start() {
-	}
-	
-	// Update is called once per frame
+
+
+	/**
+	 * UPDATE
+	 */
 	void Update() {
 		Rigidbody rb = GetComponent<Rigidbody>();
 		if(rb.velocity.y >= 0f) {
@@ -49,6 +63,11 @@ public class CubeController : MonoBehaviour {
 		}
 	}
 
+	/**
+	 * Set the type of this cube.
+	 * 
+	 * @param type The type we will set this cube to.
+	 */
 	public void setType(string type) {
 		this.type = type;
 
@@ -61,23 +80,24 @@ public class CubeController : MonoBehaviour {
 		}
 	}
 
+	/**
+	 * Get this cube's type.
+	 */
 	public string getType() {
 		return this.type;
 	}
 
+	/**
+	 * True if this cube is currently targeted, false otherwise.
+	 */
 	public bool isTargeted() {
 		return this.targeted;
 	}
 
+	/**
+	 * Set this cubes targeted property.
+	 */
 	public void setIsTargeted(bool isTargeted) {
 		this.targeted = isTargeted;
-	}
-
-	public bool isMarkedForDestroy() {
-		return markedForDestroy;
-	}
-
-	public void setMarkedForDestroy(bool mfd) {
-		this.markedForDestroy = mfd;
 	}
 }

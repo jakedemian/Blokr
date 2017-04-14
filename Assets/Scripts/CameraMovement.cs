@@ -23,12 +23,6 @@ public class CameraMovement : MonoBehaviour {
 	// Orbit speed scaling factor
 	private const float ORBIT_SPEED = 0.1f;
 
-	// Vertical pan speed scaling factor
-	private const float VERTICAL_PAN_SPEED = 0.01f;
-
-	// The maximum distance in units that the camera can pan upwards
-	private const float MAX_Y_CAMERA_OFFSET = 3f;
-
 	// The strength of the camera shake effect
 	private const float SHAKE_STRENGTH = 0.2f;
 
@@ -45,15 +39,6 @@ public class CameraMovement : MonoBehaviour {
 	// The position of the user input device, if any, on the previous frame
 	private Vector3 lastMousePos = new Vector3(0f, 0f, 0f);
 
-	// The difference between the minimum vertical pan amount and the current amount
-	private float verticalPanOffset = 0f;
-
-	// Starting y position of the camera
-	private float cameraStartingYPos;
-
-	// Maximum camera y position
-	private float maxCameraYPos;
-
 	// The current amount of time the camera has been shaking
 	private float shakeTimer = 0f;
 
@@ -68,10 +53,6 @@ public class CameraMovement : MonoBehaviour {
 	void Start() {
 		isOnMobileDevice = Application.platform == RuntimePlatform.Android
 		|| Application.platform == RuntimePlatform.IPhonePlayer;
-
-		cameraStartingYPos = transform.position.y;
-		maxCameraYPos = cameraStartingYPos + MAX_Y_CAMERA_OFFSET;
-
 	}
 
 	/**
@@ -84,7 +65,6 @@ public class CameraMovement : MonoBehaviour {
 		if(isInputDown()) {
 			Vector2 delta = getInputPos();
 			cameraOrbit(delta.x);
-			panCameraVertically(delta.y);
 		}
 
 		// stupid bit of code i have to do because they dont have a 
@@ -142,9 +122,7 @@ public class CameraMovement : MonoBehaviour {
 	 * LATE UPDATE
 	 */
 	void LateUpdate() {
-		Vector3 focalPoint = new Vector3(target.position.x, 
-			                     target.position.y + verticalPanOffset, 
-			                     target.position.z);
+		Vector3 focalPoint = target.position;
 
 		// don't want to be focusing on anything while the camera is shaking
 		if(shakeTimer == 0f) {
@@ -182,10 +160,6 @@ public class CameraMovement : MonoBehaviour {
 		return res;
 	}
 
-	/***********************************************************
-	 * CAMERA ACTIONS
-	 ***********************************************************/
-
 	/**
 	* Orbit the camera around the game board.
 	* 
@@ -194,30 +168,6 @@ public class CameraMovement : MonoBehaviour {
 	void cameraOrbit(float angle) {
 		transform.RotateAround(target.position, new Vector3(0f, 1f, 0f), angle * ORBIT_SPEED);
 
-		updateMoveCountCubePosition();
-	}
-
-
-	/**
-	* Pan the camera vertically, constraining it to upper and lower bounds.
-	* 
-	* @param amount The amount to pan the camera up/down.
-	*/
-	void panCameraVertically(float amount) {
-		verticalPanOffset -= amount * VERTICAL_PAN_SPEED;
-
-		// constrain the offset to its upper and lower limits
-		if(verticalPanOffset < 0f) {
-			verticalPanOffset = 0f;
-		} else if(cameraStartingYPos + verticalPanOffset > maxCameraYPos) {
-			verticalPanOffset = maxCameraYPos - cameraStartingYPos;
-		}
-
-		transform.position = new Vector3(
-			transform.position.x,
-			cameraStartingYPos + verticalPanOffset,
-			transform.position.z);
-		
 		updateMoveCountCubePosition();
 	}
 

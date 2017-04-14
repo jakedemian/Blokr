@@ -24,6 +24,9 @@ public class MainController : MonoBehaviour {
 	// sounds for bomb block explosion
 	public AudioClip bombSmashSound;
 
+	// sound for an invalid move / not enough moves left
+	public AudioClip invalidMoveSound;
+
 	// move count text
 	public Text guiMoveCount;
 
@@ -249,6 +252,7 @@ public class MainController : MonoBehaviour {
 						if(decrementMoveCount(targetCube.GetComponent<CubeController>().getType())) {
 							destroyCubeWithCascade(targetCube);
 						} else {
+							AudioSource.PlayClipAtPoint(invalidMoveSound, targetCube.transform.position);
 							targetCube.GetComponent<CubeController>().setIsTargeted(false);
 							targetCube = null;
 						}

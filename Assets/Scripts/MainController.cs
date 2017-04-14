@@ -272,7 +272,7 @@ public class MainController : MonoBehaviour {
 
 				if(Physics.Raycast(ray, out hit, Mathf.Infinity, RAYCAST_LAYER)) {
 					if(hit.collider.gameObject.Equals(targetCube)) {
-						this.moves--;
+						decrementMoveCount(targetCube.GetComponent<CubeController>().getType());
 						destroyCubeWithCascade(targetCube);
 					}
 				}
@@ -280,6 +280,20 @@ public class MainController : MonoBehaviour {
 				touchLockedAfterReset = false;
 			}
 		}
+	}
+
+	/**
+	 * Decrement the move counter depending on the type of cube being destroyed.
+	 */
+	void decrementMoveCount(string cubeType) {
+		if(cubeType.Equals("Cube")) {
+			this.moves--;
+		} else if(cubeType.Equals("Bomb")) {
+			this.moves -= 3;
+		}
+
+		// don't let moves be below 0
+		this.moves = this.moves < 0 ? 0 : this.moves;
 	}
 
 	/**
